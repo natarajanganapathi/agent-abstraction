@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="examples\Harness\Harness.csproj" />
   <Project Path="src\AiAgents.Abstractions\AiAgents.Abstractions.csproj" />
   <Project Path="src\AiAgents.AzureFoundry.Abstractions\AiAgents.AzureFoundry.Abstractions.csproj" />
   <Project Path="tests\AiAgents.Abstractions.Tests\AiAgents.Abstractions.Tests.csproj" />
