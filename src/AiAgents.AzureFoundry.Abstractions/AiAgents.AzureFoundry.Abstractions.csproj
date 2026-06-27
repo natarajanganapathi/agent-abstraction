@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>AiAgents.AzureFoundry.Abstractions</PackageId>
+    <Version>0.1.0</Version>
+    <Description>Microsoft Agent Framework abstractions and base classes for Azure AI Foundry agents.</Description>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="Microsoft.Agents.AI.Foundry" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Azure.AI.Projects" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AiAgents.Abstractions\AiAgents.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

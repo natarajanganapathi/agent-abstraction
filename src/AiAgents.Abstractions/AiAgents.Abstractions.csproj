@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>AiAgents.Abstractions</PackageId>
+    <Version>0.1.0</Version>
+    <Description>General-purpose Microsoft Agent Framework abstractions and base classes.</Description>
+    <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);OPENAI001</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" />
+  </ItemGroup>
+</Project>

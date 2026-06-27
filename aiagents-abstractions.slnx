@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="src\AiAgents.Abstractions\AiAgents.Abstractions.csproj" />
+  <Project Path="src\AiAgents.AzureFoundry.Abstractions\AiAgents.AzureFoundry.Abstractions.csproj" />
+  <Project Path="tests\AiAgents.Abstractions.Tests\AiAgents.Abstractions.Tests.csproj" />
+  <Project Path="tests\AiAgents.AzureFoundry.Abstractions.Tests\AiAgents.AzureFoundry.Abstractions.Tests.csproj" />
+</Solution>
