@@ -39,21 +39,6 @@ public class AiAgentFoundryBaseTests
     }
 
     [Fact]
-    public void GetProjectAgent_WithClientOptions_ReturnsNonNullAgent()
-    {
-        var agent = new TestFoundryAgent();
-        var aiAgent = agent.GetProjectAgent(
-            new FoundryClientOptions
-            {
-                Endpoint = new Uri("https://fake-endpoint.example.com"),
-                Credential = new FakeTokenCredential(),
-            },
-            new FoundryProjectAgentOptions { ModelName = "gpt-4o" });
-
-        Assert.NotNull(aiAgent);
-    }
-
-    [Fact]
     public void GetVersionedAgent_ReturnsNonNullAgent()
     {
         var agent = new TestFoundryAgent();
@@ -62,24 +47,6 @@ public class AiAgentFoundryBaseTests
         {
             AgentRef = new AgentRef("test-agent-from-portal", "1"),
         });
-
-        Assert.NotNull(aiAgent);
-    }
-
-    [Fact]
-    public void GetVersionedAgent_WithClientOptions_ReturnsNonNullAgent()
-    {
-        var agent = new TestFoundryAgent();
-        var aiAgent = agent.GetVersionedAgent(
-            new FoundryClientOptions
-            {
-                Endpoint = new Uri("https://fake-endpoint.example.com"),
-                Credential = new FakeTokenCredential(),
-            },
-            new FoundryVersionedAgentOptions
-            {
-                AgentRef = new AgentRef("test-agent-from-portal", "1"),
-            });
 
         Assert.NotNull(aiAgent);
     }

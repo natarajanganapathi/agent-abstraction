@@ -2,11 +2,6 @@ namespace AiAgents.AzureFoundry.Abstractions;
 
 public abstract class AiAgentFoundryBase : AiAgentBase
 {
-    public AIAgent GetProjectAgent(FoundryClientOptions clientOptions, FoundryProjectAgentOptions options)
-    {
-        return GetProjectAgent(AiAgentFoundryClientFactory.CreateProjectClient(clientOptions), options);
-    }
-
     public AIAgent GetProjectAgent(AIProjectClient client, FoundryProjectAgentOptions options)
     {
         ArgumentNullException.ThrowIfNull(client);
@@ -26,11 +21,6 @@ public abstract class AiAgentFoundryBase : AiAgentBase
             clientFactory: options.ClientFactory,
             loggerFactory: options.LoggerFactory,
             services: options.Services);
-    }
-
-    public AIAgent GetVersionedAgent(FoundryClientOptions clientOptions, FoundryVersionedAgentOptions options)
-    {
-        return GetVersionedAgent(AiAgentFoundryClientFactory.CreateProjectClient(clientOptions), options);
     }
 
     public AIAgent GetVersionedAgent(AIProjectClient client, FoundryVersionedAgentOptions options)

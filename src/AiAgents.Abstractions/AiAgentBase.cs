@@ -8,11 +8,6 @@ public abstract class AiAgentBase
 
     protected virtual IEnumerable<Delegate> GetTools() => [];
 
-    public AIAgent GetChatAgent(OpenAIChatClientOptions clientOptions, ChatAgentOptions? options = null)
-    {
-        return GetChatAgent(AiAgentClientFactory.CreateChatClient(clientOptions), options);
-    }
-
     public AIAgent GetChatAgent(IChatClient client, ChatAgentOptions? options = null)
     {
         ArgumentNullException.ThrowIfNull(client, nameof(client));
@@ -27,11 +22,6 @@ public abstract class AiAgentBase
             BuildToolsList(),
             options.LoggerFactory,
             options.Services);
-    }
-
-    public AIAgent GetResponsesAgent(OpenAIResponsesClientOptions clientOptions, ResponsesAgentOptions options)
-    {
-        return GetResponsesAgent(AiAgentClientFactory.CreateResponsesClient(clientOptions), options);
     }
 
     public AIAgent GetResponsesAgent(ResponsesClient client, ResponsesAgentOptions options)

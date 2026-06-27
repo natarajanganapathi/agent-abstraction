@@ -219,38 +219,12 @@ public class AiAgentBaseTests
     }
 
     [Fact]
-    public void GetChatAgent_WithClientOptions_ReturnsChatClientAgent()
-    {
-        var agent = new TestNoToolsAgent();
-
-        var aiAgent = agent.GetChatAgent(new OpenAIChatClientOptions
-        {
-            ModelName = "gpt-4o",
-            ApiKey = "test-api-key",
-        });
-
-        Assert.IsType<ChatClientAgent>(aiAgent);
-    }
-
-    [Fact]
     public void GetResponsesAgent_ReturnsNonNullAgent()
     {
         var agent = new TestWeatherAgent();
 
         var aiAgent = agent.GetResponsesAgent(
             new ResponsesClient("test-api-key"),
-            new ResponsesAgentOptions { ModelName = "gpt-4o" });
-
-        Assert.NotNull(aiAgent);
-    }
-
-    [Fact]
-    public void GetResponsesAgent_WithClientOptions_ReturnsNonNullAgent()
-    {
-        var agent = new TestWeatherAgent();
-
-        var aiAgent = agent.GetResponsesAgent(
-            new OpenAIResponsesClientOptions { ApiKey = "test-api-key" },
             new ResponsesAgentOptions { ModelName = "gpt-4o" });
 
         Assert.NotNull(aiAgent);

@@ -29,31 +29,12 @@ IChatClient chatClient = GetChatClient();
 var agent = new SupportAgent().GetChatAgent(chatClient);
 ```
 
-## Simplified Chat Client Creation
-
-```csharp
-var agent = new SupportAgent().GetChatAgent(
-    new OpenAIChatClientOptions
-    {
-        ModelName = "gpt-4o",
-        ApiKey = "api-key"
-    });
-```
-
 ## Responses Usage
 
 ```csharp
 var responsesClient = new ResponsesClient("api-key");
 var agent = new SupportAgent().GetResponsesAgent(
     responsesClient,
-    new ResponsesAgentOptions { ModelName = "gpt-4o" });
-```
-
-## Simplified Responses Client Creation
-
-```csharp
-var agent = new SupportAgent().GetResponsesAgent(
-    new OpenAIResponsesClientOptions { ApiKey = "api-key" },
     new ResponsesAgentOptions { ModelName = "gpt-4o" });
 ```
 
@@ -84,20 +65,8 @@ var versionedAgent = new FoundrySupportAgent().GetVersionedAgent(
     new FoundryVersionedAgentOptions { AgentRef = new AgentRef("support-agent", "1") });
 ```
 
-## Simplified Foundry Client Creation
-
-```csharp
-var projectAgent = new FoundrySupportAgent().GetProjectAgent(
-    new FoundryClientOptions
-    {
-        Endpoint = new Uri("https://my-project.services.ai.azure.com/api/projects/my-project"),
-        Credential = new DefaultAzureCredential(),
-    },
-    new FoundryProjectAgentOptions { ModelName = "gpt-4o" });
-```
-
 ## Notes
 
-- Consumers can either provide provider clients directly or use the simplified client option overloads.
+- Consumers provide provider clients directly; this library focuses on wiring agents rather than wrapping SDK client creation.
 - Chat agents are standardized on `IChatClient` to keep the core abstraction provider-agnostic.
 - Foundry project agents and Foundry versioned agents are modeled as separate entry points because their runtime capabilities differ.
