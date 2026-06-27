@@ -1,6 +1,6 @@
 namespace AiAgents.Abstractions;
 
-public abstract class AiAgentBase<TClient> where TClient : class
+public abstract class AiAgentBase
 {
     protected abstract string AgentName { get; }
     protected abstract string Description { get; }
@@ -8,56 +8,47 @@ public abstract class AiAgentBase<TClient> where TClient : class
 
     protected virtual IEnumerable<Delegate> GetTools() => [];
 
-    public AIAgent GetAgent(AiAgentClientOptions options)
+    public AIAgent GetChatAgent(OpenAIChatClientOptions clientOptions, ChatAgentOptions? options = null)
     {
-        var client = CreateClient(options);
-        return CreateAgent(client, options);
+        return GetChatAgent(AiAgentClientFactory.CreateChatClient(clientOptions), options);
     }
 
-    protected virtual TClient CreateClient(AiAgentClientOptions options)
+    public AIAgent GetChatAgent(IChatClient client, ChatAgentOptions? options = null)
     {
-        object client = typeof(TClient) switch
-        {
-            Type t when t == typeof(ChatClient) => new ChatClient(options.ModelName, options.ApiKey!),
-            Type t when t == typeof(ResponsesClient) => new ResponsesClient(options.ApiKey!),
-            _ => throw new NotSupportedException($"'{typeof(TClient).Name}' cannot be constructed from {nameof(AiAgentClientOptions)}"),
-        };
-        return (TClient)client;
-    }
-    protected virtual AIAgent CreateAgent(TClient client, AiAgentClientOptions options)
-    {
-        var tools = BuildToolsList();
-        var instructions = Instructions.ToString();
+        ArgumentNullException.ThrowIfNull(client, nameof(client));
 
-        return client switch
-        {
-            IChatClient cc => new ChatClientAgent(
-                options.ClientFactory?.Invoke(cc) ?? cc,
-                instructions,
-                AgentName,
-                Description,
-                tools,
-                options.LoggerFactory,
-                options.Services),
-            ChatClient raw => raw.AsAIAgent(
-                instructions,
-                AgentName,
-                Description,
-                tools,
-                options.ClientFactory,
-                options.LoggerFactory,
-                options.Services),
-            ResponsesClient rc => rc.AsAIAgent(
-                options.ModelName,
-                instructions,
-                AgentName,
-                Description,
-                tools,
-                options.ClientFactory,
-                options.LoggerFactory,
-                options.Services),
-            _ => throw new NotSupportedException($"No wrapping strategy for '{typeof(TClient).Name}'."),
-        };
+        options ??= new ChatAgentOptions();
+
+        return new ChatClientAgent(
+            options.ClientFactory?.Invoke(client) ?? client,
+            Instructions.ToString(),
+            AgentName,
+            Description,
+            BuildToolsList(),
+            options.LoggerFactory,
+            options.Services);
+    }
+
+    public AIAgent GetResponsesAgent(OpenAIResponsesClientOptions clientOptions, ResponsesAgentOptions options)
+    {
+        return GetResponsesAgent(AiAgentClientFactory.CreateResponsesClient(clientOptions), options);
+    }
+
+    public AIAgent GetResponsesAgent(ResponsesClient client, ResponsesAgentOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(client, nameof(client));
+        ArgumentNullException.ThrowIfNull(options, nameof(options));
+        ArgumentException.ThrowIfNullOrWhiteSpace(options.ModelName, nameof(options.ModelName));
+
+        return client.AsAIAgent(
+            options.ModelName,
+            Instructions.ToString(),
+            AgentName,
+            Description,
+            BuildToolsList(),
+            options.ClientFactory,
+            options.LoggerFactory,
+            options.Services);
     }
 
     protected List<AITool>? BuildToolsList()

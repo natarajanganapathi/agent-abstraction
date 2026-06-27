@@ -1,34 +1,49 @@
 namespace AiAgents.AzureFoundry.Abstractions;
 
-public abstract class AiAgentFoundryBase<TClient> : AiAgentBase<TClient> where TClient : AIProjectClient
+public abstract class AiAgentFoundryBase : AiAgentBase
 {
-    protected override TClient CreateClient(AiAgentClientOptions agentOptions)
+    public AIAgent GetProjectAgent(FoundryClientOptions clientOptions, FoundryProjectAgentOptions options)
     {
-        if (agentOptions is not AiAgentFoundryClientOptions options) { throw new NotSupportedException($"'{typeof(TClient).Name}' is not supported by {nameof(AiAgentFoundryBase<TClient>)}."); }
-        var projectClient = new AIProjectClient(options.Endpoint, options.Credential);
-        return (TClient)projectClient;
+        return GetProjectAgent(AiAgentFoundryClientFactory.CreateProjectClient(clientOptions), options);
     }
 
-    protected override AIAgent CreateAgent(TClient projectClient, AiAgentClientOptions agentOptions)
+    public AIAgent GetProjectAgent(AIProjectClient client, FoundryProjectAgentOptions options)
     {
-        if (agentOptions is not AiAgentFoundryClientOptions options) { throw new NotSupportedException($"'{typeof(TClient).Name}' is not supported by {nameof(AiAgentFoundryBase<TClient>)}."); }
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(options);
 
-        var tools = BuildToolsList();
-
-        if (options.AgentRef is { } agentRef)
+        if (string.IsNullOrWhiteSpace(options.ModelName))
         {
-            var reference = new AgentReference(agentRef.Name, agentRef.Version);
-            return projectClient.AsAIAgent(reference, tools, options.ClientFactory, options.Services);
+            throw new ArgumentException("Value cannot be null or whitespace.", nameof(options.ModelName));
         }
 
-        return projectClient.AsAIAgent(
+        return client.AsAIAgent(
             model: options.ModelName,
             instructions: Instructions.ToString(),
             name: AgentName,
             description: Description,
-            tools: tools,
+            tools: BuildToolsList(),
             clientFactory: options.ClientFactory,
             loggerFactory: options.LoggerFactory,
             services: options.Services);
+    }
+
+    public AIAgent GetVersionedAgent(FoundryClientOptions clientOptions, FoundryVersionedAgentOptions options)
+    {
+        return GetVersionedAgent(AiAgentFoundryClientFactory.CreateProjectClient(clientOptions), options);
+    }
+
+    public AIAgent GetVersionedAgent(AIProjectClient client, FoundryVersionedAgentOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(options.AgentRef, nameof(options.AgentRef));
+
+        if (string.IsNullOrWhiteSpace(options.AgentRef.Name))
+        {
+            throw new ArgumentException("Value cannot be null or whitespace.", $"{nameof(options.AgentRef)}.{nameof(options.AgentRef.Name)}");
+        }
+        var reference = new AgentReference(options.AgentRef.Name, options.AgentRef.Version);
+        return client.AsAIAgent(reference, BuildToolsList(), options.ClientFactory, options.Services);
     }
 }

@@ -56,32 +56,26 @@ internal sealed class SingleServiceProvider(object service) : IServiceProvider
         => serviceType.IsInstanceOfType(Service) ? Service : null;
 }
 
-internal sealed class TestWeatherAgent : AiAgentBase<FakeChatClient>
+internal sealed class TestWeatherAgent : AiAgentBase
 {
     protected override string AgentName => "TestWeatherAgent";
     protected override string Description => string.Empty;
     protected override StringBuilder Instructions => new("You are a weather assistant.");
     protected override IEnumerable<Delegate> GetTools() => [() => "sunny"];
-
-    protected override FakeChatClient CreateClient(AiAgentClientOptions options) => new();
 }
 
-internal sealed class TestNoToolsAgent : AiAgentBase<FakeChatClient>
+internal sealed class TestNoToolsAgent : AiAgentBase
 {
     protected override string AgentName => "TestNoToolsAgent";
     protected override string Description => string.Empty;
     protected override StringBuilder Instructions => new("You are a simple assistant.");
-
-    protected override FakeChatClient CreateClient(AiAgentClientOptions options) => new();
 }
 
-internal sealed class TestDescribedAgent : AiAgentBase<FakeChatClient>
+internal sealed class TestDescribedAgent : AiAgentBase
 {
     protected override string AgentName => "TestDescribedAgent";
     protected override string Description => "A helpful weather agent that provides forecasts.";
     protected override StringBuilder Instructions => new("You are a described assistant.");
-
-    protected override FakeChatClient CreateClient(AiAgentClientOptions options) => new();
 }
 
 public class AiAgentBaseTests
@@ -128,82 +122,74 @@ public class AiAgentBaseTests
         return false;
     }
 
-    private static AiAgentClientOptions CreateOptions() => new()
-    {
-        ModelName = "gpt-4o",
-        Endpoint = new Uri("https://example.com")
-    };
-
     [Fact]
-    public void GetAgent_ReturnsChatClientAgent()
+    public void GetChatAgent_ReturnsChatClientAgent()
     {
         var agent = new TestWeatherAgent();
 
-        var aiAgent = agent.GetAgent(CreateOptions());
+        var aiAgent = agent.GetChatAgent(new FakeChatClient());
 
         Assert.IsType<ChatClientAgent>(aiAgent);
     }
 
     [Fact]
-    public void GetAgent_SetsInstructions()
+    public void GetChatAgent_SetsInstructions()
     {
         var agent = new TestWeatherAgent();
 
-        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetAgent(CreateOptions()));
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient()));
 
         Assert.Equal("You are a weather assistant.", chatAgent.Instructions);
     }
 
     [Fact]
-    public void GetAgent_SetsNameFromClassName()
+    public void GetChatAgent_SetsNameFromClassName()
     {
         var agent = new TestWeatherAgent();
 
-        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetAgent(CreateOptions()));
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient()));
 
         Assert.Equal("TestWeatherAgent", chatAgent.Name);
     }
 
     [Fact]
-    public void GetAgent_WithNoTools_DoesNotThrow()
+    public void GetChatAgent_WithNoTools_DoesNotThrow()
     {
         var agent = new TestNoToolsAgent();
 
-        var exception = Record.Exception(() => agent.GetAgent(CreateOptions()));
+        var exception = Record.Exception(() => agent.GetChatAgent(new FakeChatClient()));
 
         Assert.Null(exception);
     }
 
     [Fact]
-    public void GetAgent_DescriptionDefaultsToEmptyString()
+    public void GetChatAgent_DescriptionDefaultsToEmptyString()
     {
         var agent = new TestWeatherAgent();
 
-        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetAgent(CreateOptions()));
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient()));
 
         Assert.Equal(string.Empty, chatAgent.Description);
     }
 
     [Fact]
-    public void GetAgent_SetsDescriptionWhenOverridden()
+    public void GetChatAgent_SetsDescriptionWhenOverridden()
     {
         var agent = new TestDescribedAgent();
 
-        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetAgent(CreateOptions()));
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient()));
 
         Assert.Equal("A helpful weather agent that provides forecasts.", chatAgent.Description);
     }
 
     [Fact]
-    public void GetAgent_AcceptsClientFactoryAndServices()
+    public void GetChatAgent_AcceptsClientFactoryAndServices()
     {
         var agent = new TestNoToolsAgent();
         var service = new TestService();
         var serviceProvider = new SingleServiceProvider(service);
-        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetAgent(new AiAgentClientOptions
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient(), new ChatAgentOptions
         {
-            ModelName = "gpt-4o",
-            Endpoint = new Uri("https://example.com"),
             ClientFactory = client => new WrappedChatClient(client),
             LoggerFactory = Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance,
             Services = serviceProvider,
@@ -213,12 +199,92 @@ public class AiAgentBaseTests
     }
 
     [Fact]
-    public void GetAgent_AddsToolsToChatOptions()
+    public void GetChatAgent_AddsToolsToChatOptions()
     {
         var agent = new TestWeatherAgent();
 
-        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetAgent(CreateOptions()));
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient()));
 
         Assert.Equal(1, GetToolCount(chatAgent));
+    }
+
+    [Fact]
+    public void GetChatAgent_WithNullClient_ThrowsArgumentNullException()
+    {
+        var agent = new TestNoToolsAgent();
+
+        var exception = Assert.Throws<ArgumentNullException>(() => agent.GetChatAgent((IChatClient)null!));
+
+        Assert.Equal("client", exception.ParamName);
+    }
+
+    [Fact]
+    public void GetChatAgent_WithClientOptions_ReturnsChatClientAgent()
+    {
+        var agent = new TestNoToolsAgent();
+
+        var aiAgent = agent.GetChatAgent(new OpenAIChatClientOptions
+        {
+            ModelName = "gpt-4o",
+            ApiKey = "test-api-key",
+        });
+
+        Assert.IsType<ChatClientAgent>(aiAgent);
+    }
+
+    [Fact]
+    public void GetResponsesAgent_ReturnsNonNullAgent()
+    {
+        var agent = new TestWeatherAgent();
+
+        var aiAgent = agent.GetResponsesAgent(
+            new ResponsesClient("test-api-key"),
+            new ResponsesAgentOptions { ModelName = "gpt-4o" });
+
+        Assert.NotNull(aiAgent);
+    }
+
+    [Fact]
+    public void GetResponsesAgent_WithClientOptions_ReturnsNonNullAgent()
+    {
+        var agent = new TestWeatherAgent();
+
+        var aiAgent = agent.GetResponsesAgent(
+            new OpenAIResponsesClientOptions { ApiKey = "test-api-key" },
+            new ResponsesAgentOptions { ModelName = "gpt-4o" });
+
+        Assert.NotNull(aiAgent);
+    }
+
+    [Fact]
+    public void GetResponsesAgent_WithNullClient_ThrowsArgumentNullException()
+    {
+        var agent = new TestNoToolsAgent();
+
+        var exception = Assert.Throws<ArgumentNullException>(() => agent.GetResponsesAgent((ResponsesClient)null!, new ResponsesAgentOptions { ModelName = "gpt-4o" }));
+
+        Assert.Equal("client", exception.ParamName);
+    }
+
+    [Fact]
+    public void GetResponsesAgent_WithNullOptions_ThrowsArgumentNullException()
+    {
+        var agent = new TestNoToolsAgent();
+
+        var exception = Assert.Throws<ArgumentNullException>(() => agent.GetResponsesAgent(new ResponsesClient("test-api-key"), null!));
+
+        Assert.Equal("options", exception.ParamName);
+    }
+
+    [Fact]
+    public void GetResponsesAgent_WithEmptyModelName_ThrowsArgumentException()
+    {
+        var agent = new TestNoToolsAgent();
+
+        var exception = Assert.Throws<ArgumentException>(() => agent.GetResponsesAgent(
+            new ResponsesClient("test-api-key"),
+            new ResponsesAgentOptions { ModelName = " " }));
+
+        Assert.Equal("ModelName", exception.ParamName);
     }
 }

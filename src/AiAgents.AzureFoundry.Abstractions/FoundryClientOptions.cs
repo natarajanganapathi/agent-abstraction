@@ -1,7 +1,7 @@
 namespace AiAgents.AzureFoundry.Abstractions;
 
-public record AiAgentFoundryClientOptions : AiAgentClientOptions
+public record FoundryClientOptions
 {
+    public required Uri Endpoint { get; init; }
     public TokenCredential Credential { get; init; } = new DefaultAzureCredential();
-    public AgentRef? AgentRef { get; init; }
 }
