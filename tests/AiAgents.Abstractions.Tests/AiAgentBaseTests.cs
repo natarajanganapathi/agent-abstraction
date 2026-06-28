@@ -48,6 +48,13 @@ internal sealed class WrappedChatClient(IChatClient innerClient) : IChatClient
 
 internal sealed class TestService;
 
+internal sealed class TestContextProvider : AIContextProvider
+{
+    public override IReadOnlyList<string> StateKeys => [];
+}
+
+internal sealed class TestChatHistoryProvider : ChatHistoryProvider;
+
 internal sealed class SingleServiceProvider(object service) : IServiceProvider
 {
     public object Service { get; } = service;
@@ -78,6 +85,24 @@ internal sealed class TestDescribedAgent : AiAgentBase
     protected override StringBuilder Instructions => new("You are a described assistant.");
 }
 
+internal sealed class TestContextAwareAgent : AiAgentBase
+{
+    private readonly AIContextProvider[] _contextProviders = [new TestContextProvider()];
+    private readonly ChatHistoryProvider _chatHistoryProvider = new TestChatHistoryProvider();
+
+    protected override string AgentName => "TestContextAwareAgent";
+    protected override string Description => "Agent with context and history providers.";
+    protected override StringBuilder Instructions => new("You are a context-aware assistant.");
+
+    protected override IEnumerable<AIContextProvider> GetContextProviders() => _contextProviders;
+
+    protected override ChatHistoryProvider? GetChatHistoryProvider() => _chatHistoryProvider;
+
+    public AIContextProvider ContextProvider => _contextProviders[0];
+
+    public ChatHistoryProvider ChatHistoryProvider => _chatHistoryProvider;
+}
+
 public class AiAgentBaseTests
 {
     private static int GetToolCount(object agent)
@@ -91,6 +116,12 @@ public class AiAgentBaseTests
 
         return tools?.Count ?? 0;
     }
+
+    private static int GetContextProviderCount(ChatClientAgent agent)
+        => agent.AIContextProviders?.Count ?? 0;
+
+    private static ChatHistoryProvider? GetChatHistoryProvider(ChatClientAgent agent)
+        => agent.ChatHistoryProvider;
 
     private static bool ContainsChatClientType(IChatClient chatClient, Type targetType)
         => ContainsChatClientType(chatClient, targetType, []);
@@ -219,6 +250,28 @@ public class AiAgentBaseTests
     }
 
     [Fact]
+    public void GetChatAgent_AddsContextProviders()
+    {
+        var agent = new TestContextAwareAgent();
+
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient()));
+        var contextProviders = Assert.IsAssignableFrom<IReadOnlyList<AIContextProvider>>(chatAgent.AIContextProviders);
+
+        Assert.Equal(1, GetContextProviderCount(chatAgent));
+        Assert.Same(agent.ContextProvider, contextProviders.Single());
+    }
+
+    [Fact]
+    public void GetChatAgent_SetsChatHistoryProvider()
+    {
+        var agent = new TestContextAwareAgent();
+
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetChatAgent(new FakeChatClient()));
+
+        Assert.Same(agent.ChatHistoryProvider, GetChatHistoryProvider(chatAgent));
+    }
+
+    [Fact]
     public void GetResponsesAgent_ReturnsNonNullAgent()
     {
         var agent = new TestWeatherAgent();
@@ -228,6 +281,21 @@ public class AiAgentBaseTests
             new ResponsesAgentOptions { ModelName = "gpt-4o" });
 
         Assert.NotNull(aiAgent);
+    }
+
+    [Fact]
+    public void GetResponsesAgent_AddsContextProvidersAndChatHistoryProvider()
+    {
+        var agent = new TestContextAwareAgent();
+
+        var chatAgent = Assert.IsType<ChatClientAgent>(agent.GetResponsesAgent(
+            new ResponsesClient("test-api-key"),
+            new ResponsesAgentOptions { ModelName = "gpt-4o" }));
+        var contextProviders = Assert.IsAssignableFrom<IReadOnlyList<AIContextProvider>>(chatAgent.AIContextProviders);
+
+        Assert.Equal(1, GetContextProviderCount(chatAgent));
+        Assert.Same(agent.ContextProvider, contextProviders.Single());
+        Assert.Same(agent.ChatHistoryProvider, GetChatHistoryProvider(chatAgent));
     }
 
     [Fact]

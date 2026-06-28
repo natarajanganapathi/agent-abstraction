@@ -4,6 +4,7 @@
     <Version>0.1.0</Version>
     <Description>Microsoft Agent Framework abstractions and base classes for Azure AI Foundry agents.</Description>
     <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);OPENAI001</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Agents.AI" />

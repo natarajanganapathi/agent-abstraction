@@ -7,6 +7,8 @@ public abstract class AiAgentBase
     protected abstract StringBuilder Instructions { get; }
 
     protected virtual IEnumerable<Delegate> GetTools() => [];
+    protected virtual IEnumerable<AIContextProvider> GetContextProviders() => [];
+    protected virtual ChatHistoryProvider? GetChatHistoryProvider() => null;
 
     public AIAgent GetChatAgent(IChatClient client, ChatAgentOptions? options = null)
     {
@@ -16,10 +18,7 @@ public abstract class AiAgentBase
 
         return new ChatClientAgent(
             options.ClientFactory?.Invoke(client) ?? client,
-            Instructions.ToString(),
-            AgentName,
-            Description,
-            BuildToolsList(),
+            BuildAgentOptions(),
             options.LoggerFactory,
             options.Services);
     }
@@ -31,14 +30,28 @@ public abstract class AiAgentBase
         ArgumentException.ThrowIfNullOrWhiteSpace(options.ModelName, nameof(options.ModelName));
 
         return client.AsAIAgent(
+            BuildAgentOptions(options.ModelName),
             options.ModelName,
-            Instructions.ToString(),
-            AgentName,
-            Description,
-            BuildToolsList(),
             options.ClientFactory,
             options.LoggerFactory,
             options.Services);
+    }
+
+    protected ChatClientAgentOptions BuildAgentOptions(string? modelName = null)
+    {
+        return new ChatClientAgentOptions
+        {
+            Name = AgentName,
+            Description = Description,
+            ChatOptions = new ChatOptions
+            {
+                Instructions = Instructions.ToString(),
+                ModelId = modelName,
+                Tools = BuildToolsList(),
+            },
+            AIContextProviders = GetContextProviders().ToList(),
+            ChatHistoryProvider = GetChatHistoryProvider(),
+        };
     }
 
     protected List<AITool>? BuildToolsList()
