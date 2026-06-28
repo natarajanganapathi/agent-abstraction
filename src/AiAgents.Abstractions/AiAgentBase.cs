@@ -63,4 +63,9 @@ public abstract class AiAgentBase
 
         return tools.Count > 0 ? tools : null;
     }
+
+    protected static Delegate AsDelegate(Expression<Func<object?>> expression)
+    {
+        return expression.Compile(preferInterpretation: true);
+    }
 }

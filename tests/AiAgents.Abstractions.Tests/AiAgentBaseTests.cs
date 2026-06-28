@@ -68,7 +68,7 @@ internal sealed class TestWeatherAgent : AiAgentBase
     protected override string AgentName => "TestWeatherAgent";
     protected override string Description => string.Empty;
     protected override StringBuilder Instructions => new("You are a weather assistant.");
-    protected override IEnumerable<Delegate> GetTools() => [() => "sunny"];
+    protected override IEnumerable<Delegate> GetTools() => [AsDelegate(() => "sunny")];
 }
 
 internal sealed class TestNoToolsAgent : AiAgentBase
